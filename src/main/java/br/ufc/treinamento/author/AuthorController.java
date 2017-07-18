@@ -1,5 +1,7 @@
 package br.ufc.treinamento.author;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,8 +23,12 @@ import java.util.List;
 @RequestMapping("/authors")
 public class AuthorController {
 
+    public static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
+
     @Autowired
     private AuthorRepository repository;
+
+
 
     @RequestMapping(method = RequestMethod.GET,
                     produces = MediaType.APPLICATION_JSON_VALUE)
@@ -31,9 +37,7 @@ public class AuthorController {
     }
 
 
-    @RequestMapping(
-            method = RequestMethod.POST
-    )
+    @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Void> createAuthor(@RequestBody Author author) throws MalformedURLException, URISyntaxException {
         repository.save(author);
 
@@ -56,21 +60,29 @@ public class AuthorController {
         return ResponseEntity.ok(authorFounded);
     }
 
-    @RequestMapping(
-            value = "/{id}",
-            method = RequestMethod.DELETE
-    )
-    public ResponseEntity<Author> removeAuthor(@PathVariable Integer id){
-        Author authorToRemove = repository.findAuthorById(id);
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> removeAuthor(@PathVariable Integer id){
+        logger.info("Pegando e deletando o author com id {}", id);
 
-        System.out.println("Chamei");
+        Author authorToRemove = null; // repository.findAuthorById(id);
 
-        if(authorToRemove != null){
-            repository.remove(authorToRemove.getId());
-            return new ResponseEntity<Author>(HttpStatus.OK);
+        if(authorToRemove == null){
+            logger.info("Nao foi possivel deletar algum autor com o id {}", id);
+
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        else return new ResponseEntity<Author>(HttpStatus.NOT_FOUND);
+
+        else{
+            logger.info("Vou remover o autor: " + authorToRemove.getFirstName());
+            repository.remove(authorToRemove);
+            return new ResponseEntity<Author>(HttpStatus.NO_CONTENT);
+        }
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
+    public ResponseEntity<Author> updateAuthor(@RequestBody Author author){
+        return null;
     }
 
 }

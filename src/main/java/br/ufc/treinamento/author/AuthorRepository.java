@@ -13,5 +13,5 @@ public interface AuthorRepository {
 
     Author findAuthorById(Integer id);
 
-    void remove(Integer id);
+    void remove(Author author);
 }

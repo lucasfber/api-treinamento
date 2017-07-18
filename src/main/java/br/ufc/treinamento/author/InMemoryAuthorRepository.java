@@ -34,7 +34,7 @@ public class InMemoryAuthorRepository implements AuthorRepository{
     }
 
     @Override
-    public void remove(Integer id) {
-        AUTHORS.remove(id);
+    public void remove(Author author) {
+        AUTHORS.remove(author);
     }
 }

@@ -10,6 +10,5 @@ public class DemoTreinamentoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DemoTreinamentoApplication.class, args);
-		System.out.println("Ola Mundo");
 	}
 }
