@@ -28,10 +28,7 @@ public class AuthorController {
     @Autowired
     private AuthorRepository repository;
 
-
-
-    @RequestMapping(method = RequestMethod.GET,
-                    produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<Iterable<Author>> queryAllAuthors(){
         return ResponseEntity.ok(repository.findAll());
     }
@@ -49,10 +46,7 @@ public class AuthorController {
     }
 
 
-    @RequestMapping(
-            value = "/{id}",
-            method = RequestMethod.GET
-    )
+    @RequestMapping(value = "{id}", method = RequestMethod.GET)
     public ResponseEntity<Author> queryAuthor(@PathVariable Integer id){
 
         Author authorFounded = repository.findAuthorById(id);
@@ -60,29 +54,55 @@ public class AuthorController {
         return ResponseEntity.ok(authorFounded);
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> removeAuthor(@PathVariable Integer id){
-        logger.info("Pegando e deletando o author com id {}", id);
+    @RequestMapping(value = "{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> removeAuthor(@PathVariable Integer id) {
+    	 logger.info("Pegando e deletando o author com id {}", id);
 
-        Author authorToRemove = null; // repository.findAuthorById(id);
+         Author authorToRemove = repository.findAuthorById(id);
 
-        if(authorToRemove == null){
-            logger.info("Nao foi possivel deletar algum autor com o id {}", id);
+         if(authorToRemove == null){
+             logger.info("Nao foi possivel deletar algum autor com o id {}", id);
 
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         }
 
+         logger.info("Vou remover o autor: " + authorToRemove.getFirstName());
+         repository.remove(authorToRemove);
+         
+         return new ResponseEntity<Author>(HttpStatus.NO_CONTENT);
+         
+    }
+    
+    @RequestMapping(value = "{id}", method = RequestMethod.PUT)
+    public ResponseEntity<?> updateAuthor(@PathVariable Integer id, @RequestBody Author author){
+    	logger.info("ATUALIZANDO AUTOR COM O ID" + id);
 
-        else{
-            logger.info("Vou remover o autor: " + authorToRemove.getFirstName());
-            repository.remove(authorToRemove);
-            return new ResponseEntity<Author>(HttpStatus.NO_CONTENT);
-        }
+    	logger.info("DADOS PARA ATUALIZAR O AUTOR" + author.getFirstName() + " " + 
+    	author.getLastName() + " " + author.getId());
+    	
+    	Author authorToUpdate = repository.findAuthorById(id);
+    	
+    	
+    	if(authorToUpdate == null) {
+    		logger.info("NAO FOI ENCONTRADO NENHUM AUTOR COM O ID" + id);
+    		
+    		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    	}
+    	
+    	repository.remove(repository.findAuthorById(id));
+    	
+    	authorToUpdate.setId(author.getId());
+    	authorToUpdate.setFirstName(author.getFirstName());
+    	authorToUpdate.setLastName(author.getLastName());
+    	
+    	repository.save(authorToUpdate);
+    	
+    	logger.info("DADOS ATUALIZADOS" + authorToUpdate.getFirstName() + " " + 
+    	authorToUpdate.getLastName() + " " + authorToUpdate.getId());
+
+    	return new ResponseEntity<Author>(authorToUpdate, HttpStatus.OK);
+  
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<Author> updateAuthor(@RequestBody Author author){
-        return null;
-    }
 
 }
