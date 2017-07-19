@@ -6,6 +6,8 @@ import br.ufc.treinamento.publisher.Publisher;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,24 +25,19 @@ public class Publication {
 	private Integer id;
 	
 	private String title;
-
+	
 	@CreatedDate
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date publicationDate;
-
-	public Date getPublicationDate() {
-		return publicationDate;
-	}
-
-	public void setPublicationDate(Date publicationDate) {
-		this.publicationDate = publicationDate;
-	}
 
 	@ManyToOne
 	private Author author;
 	
 	@ManyToOne
 	private Publisher publisher;
+	
+	@Enumerated(EnumType.STRING)
+	private PublicationType type;
 	
 	public Publication() {
 		// TODO Auto-generated constructor stub
@@ -83,5 +80,14 @@ public class Publication {
 
 	public void setPublisher(Publisher publisher) {
 		this.publisher = publisher;
-	}		
+	}
+	
+	public Date getPublicationDate() {
+		return publicationDate;
+	}
+
+	public void setPublicationDate(Date publicationDate) {
+		this.publicationDate = publicationDate;
+	}
+	
 }
