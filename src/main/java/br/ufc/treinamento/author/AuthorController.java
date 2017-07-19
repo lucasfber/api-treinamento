@@ -1,42 +1,35 @@
 package br.ufc.treinamento.author;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import javax.websocket.server.PathParam;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
 
-/**
- * Created by lucas on 17/07/17.
- */
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.ufc.treinamento.publication.Publication;
+
 @RestController
 @RequestMapping("/authors")
 public class AuthorController {
 
-    public static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
-
-    @Autowired
-    private AuthorRepository repository;
-
-    @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<Iterable<Author>> queryAllAuthors(){
-        return ResponseEntity.ok(repository.findAll());
-    }
-
-
-    @RequestMapping(method = RequestMethod.POST)
+	@Autowired
+	private AuthorService service;
+	
+	@RequestMapping(method = RequestMethod.GET)
+	public ResponseEntity<Iterable<Author>> queryAllAuthors(){
+		return new ResponseEntity<Iterable<Author>>(service.findAll(), HttpStatus.OK);
+	}
+	
+	@RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Void> createAuthor(@RequestBody Author author) throws MalformedURLException, URISyntaxException {
-        repository.save(author);
+        service.save(author);
 
         URL createdURL = new URL("http://localhost:8080/authors/" + author.getId().toString());
 
@@ -45,64 +38,59 @@ public class AuthorController {
                 .build();
     }
 
-
     @RequestMapping(value = "{id}", method = RequestMethod.GET)
     public ResponseEntity<Author> queryAuthor(@PathVariable Integer id){
-
-        Author authorFounded = repository.findAuthorById(id);
-
+    	
+        Author authorFounded = service.findAuthorById(id);
+        if(authorFounded == null) {
+        	return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        	
         return ResponseEntity.ok(authorFounded);
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.DELETE)
     public ResponseEntity<?> removeAuthor(@PathVariable Integer id) {
-    	 logger.info("Pegando e deletando o author com id {}", id);
 
-         Author authorToRemove = repository.findAuthorById(id);
+         Author authorToRemove = service.findAuthorById(id);
 
          if(authorToRemove == null){
-             logger.info("Nao foi possivel deletar algum autor com o id {}", id);
-
              return new ResponseEntity<>(HttpStatus.NOT_FOUND);
          }
 
-         logger.info("Vou remover o autor: " + authorToRemove.getFirstName());
-         repository.remove(authorToRemove);
+         service.remove(authorToRemove);
          
          return new ResponseEntity<Author>(HttpStatus.NO_CONTENT);
-         
     }
-    
+
     @RequestMapping(value = "{id}", method = RequestMethod.PUT)
     public ResponseEntity<?> updateAuthor(@PathVariable Integer id, @RequestBody Author author){
-    	logger.info("ATUALIZANDO AUTOR COM O ID" + id);
-
-    	logger.info("DADOS PARA ATUALIZAR O AUTOR" + author.getFirstName() + " " + 
-    	author.getLastName() + " " + author.getId());
-    	
-    	Author authorToUpdate = repository.findAuthorById(id);
+    	Author authorToUpdate = service.findAuthorById(id);
     	
     	
-    	if(authorToUpdate == null) {
-    		logger.info("NAO FOI ENCONTRADO NENHUM AUTOR COM O ID" + id);
-    		
+    	if(authorToUpdate == null) {    		
     		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     	}
     	
-    	repository.remove(repository.findAuthorById(id));
-    	
-    	authorToUpdate.setId(author.getId());
     	authorToUpdate.setFirstName(author.getFirstName());
     	authorToUpdate.setLastName(author.getLastName());
     	
-    	repository.save(authorToUpdate);
+    	Author authorUpdated = service.update(authorToUpdate);
     	
-    	logger.info("DADOS ATUALIZADOS" + authorToUpdate.getFirstName() + " " + 
-    	authorToUpdate.getLastName() + " " + authorToUpdate.getId());
-
-    	return new ResponseEntity<Author>(authorToUpdate, HttpStatus.OK);
+    	return new ResponseEntity<Author>(authorUpdated, HttpStatus.OK);
   
     }
-
+    
+    @RequestMapping("{id}/pubs")
+    public ResponseEntity<Iterable<Publication>> getAuthorPublications(@PathVariable Integer id){
+    	
+    	Author author = service.findAuthorById(id);
+    	
+    	if(author == null) {
+    		return new ResponseEntity<Iterable<Publication>>(HttpStatus.NOT_FOUND);
+    	}
+    		
+    	return new ResponseEntity<Iterable<Publication>>(author.getPubs(), HttpStatus.OK);
+    }
 
 }
